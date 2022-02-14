@@ -10,7 +10,7 @@ var mysql = require('mysql');
  });
  pool.connect(function(err) {
     if (err) {
-      console.error('error connecting: ' + err.stack);
+      console.error("Erro ao connectar ao banco de dados");
       return;
     }
     console.log('connectado com sucesso');

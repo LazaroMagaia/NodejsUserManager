@@ -7,6 +7,20 @@ const path = require("path");
 */
 const dotenv = require('dotenv');
 dotenv.config();
+/**
+ * SOCKET IO
+ */
+ const http = require('http');
+ const server = http.createServer(app);
+ const { Server } = require("socket.io");
+ const io = new Server(server);
+ io.on('connection', (socket) => {
+    io.emit("firstEvent","sejam bem vindos");
+    socket.on("disconected",()=>{});
+  });
+  server.listen(4000, () => {
+    console.log('listening on *:4000');
+  });
 
 /*
  * APP USES

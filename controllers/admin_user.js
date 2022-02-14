@@ -50,6 +50,16 @@ let verify =(req,res,next)=>{
 
 router.post("/register",(req,res)=>{
     const {name_company,email,contact_01,contact_02,Endereco} = req.body
+    const db_email =`SELECT * FROM nc_user_admin WHERE email = ?`
+    pool.query(db_email,[email],(err,result)=>{
+        if(err)
+        {
+            return res.status(401).json(error);
+        }
+        if(result){
+            return res.status(403).json("esse email ja esta em uso, tente outro");
+        }
+    });
     const admin = true;
     const password = CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_PASS).toString();
     const sqlInsert =

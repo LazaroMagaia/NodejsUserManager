@@ -4,9 +4,7 @@ const CryptoJS = require('crypto-js');
 const jwt = require("jsonwebtoken");
 var crypto = require('crypto');
 const multer = require('multer');
-var hash = crypto.createHash('md5').update('message').digest('hex');
-
-
+const { response } = require('express');
 const storage = multer.diskStorage({
     destination: function(req,file,cb)
     {
@@ -33,20 +31,32 @@ const upload = multer({storage:storage,limits:{
 
 router.post("/register",(req,res)=>{
     const {first_name,second_name,email} = req.body
-    const password = CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_PASS).toString();
-    const sqlInsert =
-    `INSERT INTO nc_user (first_name,second_name,email,password)
-     VALUES(?,?,?,?)`
-    pool.query(sqlInsert,[first_name,second_name,email,password],
-        (error,result)=>{
-        if(error)
+    const db_email =`SELECT * FROM nc_user WHERE email = ?`
+    pool.query(db_email,[email],(err,result)=>{
+        if(err)
         {
             return res.status(401).json(error);
-        }else
-        {
-            return res.status(200).json("usuario registrado com sucesso");
         }
-    });
+        if(result[0]){
+            return res.status(500).json("esse email ja esta em uso, tente outro");
+        }else{
+            const password = CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_PASS).toString();
+            const sqlInsert =
+            `INSERT INTO nc_user (first_name,second_name,email,password)
+            VALUES(?,?,?,?)`
+            pool.query(sqlInsert,[first_name,second_name,email,password],
+                (error,result)=>{
+                if(error)
+                {
+                    return res.status(401).json(error);
+                }else
+                {
+                    return res.status(200).json("usuario registrado com sucesso");
+                }
+            });
+        }
+    }) 
+    
 });
 
 let verify =(req,res,next)=>{
@@ -154,17 +164,42 @@ router.get("/OneUser/:id",verify,(req,res)=>{
 router.put("/edit/:id",verify,(req,res)=>{
     const id = req.params.id;
     const {first_name,second_name,email} = req.body
-    const password = CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_PASS).toString();
-    const sqlInsert =
-    `UPDATE nc_user SET first_name= ?,second_name= ?,email=?,password=? where id=?`
-    pool.query(sqlInsert,[first_name,second_name,email,password,id],
-        (error,result)=>{
-        if(error)
+    const db_email =`SELECT * FROM nc_user`
+    db_email_validation = req.body.email;
+    vd = 0;
+    pool.query(db_email,(err,result,fields)=>{
+        if(err)
         {
-            return res.status(401).json(error);
-        }else
-        {
-            return res.status(200).json("Editado com sucesso");
+            return res.status(401).json(err);
+        }
+        if(result){
+            emails = result.length;
+            for(let i=0;i<emails;i++)
+            {
+                if(result[i].email == db_email_validation)
+                {
+                    vd+=i;
+                   let total = vd;
+                }
+            }
+            if(total > 0){
+                return res.status(500).json("Email invalido");
+            }else
+            {       
+                const password = CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_PASS).toString();
+                const sqlInsert =
+                `UPDATE nc_user SET first_name= ?,second_name= ?,email=?,password=? where id=?`
+                pool.query(sqlInsert,[first_name,second_name,email,password,id],
+                    (error,result)=>{
+                    if(error)
+                    {
+                        return res.status(401).json(error);
+                    }else
+                    {
+                        return res.status(200).json("Editado com sucesso");
+                    }
+                });
+            }
         }
     });
 });
