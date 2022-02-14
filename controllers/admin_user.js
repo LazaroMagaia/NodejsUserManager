@@ -50,32 +50,34 @@ let verify =(req,res,next)=>{
 
 router.post("/register",(req,res)=>{
     const {name_company,email,contact_01,contact_02,Endereco} = req.body
+    const admin = true;
+    const password = CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_PASS).toString();
     const db_email =`SELECT * FROM nc_user_admin WHERE email = ?`
     pool.query(db_email,[email],(err,result)=>{
         if(err)
         {
             return res.status(401).json(error);
         }
-        if(result){
+        if(result >0){
             return res.status(403).json("esse email ja esta em uso, tente outro");
-        }
-    });
-    const admin = true;
-    const password = CryptoJS.AES.encrypt(req.body.password, process.env.SECRET_PASS).toString();
-    const sqlInsert =
-    `INSERT INTO nc_user_admin (name_company,endereco,email,contact_01,contact_02,password,admin)
-     VALUES(?,?,?,?,?,?,?)`
-    pool.query(sqlInsert,[name_company,Endereco,email,contact_01,contact_02,password,admin],
-        (error,result)=>{
-        if(error)
-        {
-            return res.status(401).json(error);
         }else
         {
-            return res.status(200).json("usuario registrado com sucesso");
-        }
+            const sqlInsert =
+            `INSERT INTO nc_user_admin (name_company,endereco,email,contact_01,contact_02,password,admin)
+             VALUES(?,?,?,?,?,?,?)`
+            pool.query(sqlInsert,[name_company,Endereco,email,contact_01,contact_02,password,admin],
+                (error,result)=>{
+                if(error)
+                {
+                    return res.status(401).json(error);
+                }else
+                {
+                    return res.status(200).json("usuario registrado com sucesso");
+                }
+            });
+        }});
     });
-});
+
 router.put("/adminPhoto/:id",upload.single("file"),verify,(req,res)=>{
     const id = req.params.id;
     const image_company = req.body.name;
