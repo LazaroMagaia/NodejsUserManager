@@ -58,10 +58,11 @@ router.post("/register",(req,res)=>{
         {
             return res.status(401).json(error);
         }
-        if(result >0){
+        if(result[0]){
             return res.status(403).json("esse email ja esta em uso, tente outro");
         }else
         {
+            //console.log(result);
             const sqlInsert =
             `INSERT INTO nc_user_admin (name_company,endereco,email,contact_01,contact_02,password,admin)
              VALUES(?,?,?,?,?,?,?)`
